@@ -1,4 +1,4 @@
-# Yet Another Magic Lamp (Plasma 6.6+)
+# Yet Another Magic Lamp (Plasma 6.6+, maintained for 6.7.x)
 
 <div align="center">
   <a href="https://youtu.be/i8tt4JLWGy8">
@@ -10,7 +10,7 @@
 
 Yet Another Magic Lamp is a window minimization effect for KWin. Whenever a window is minimized, it'll get sucked down into the dock/panel. Compared to the Magic Lamp effect shipped with KWin, this effect features a smoother, more „curvy“ animation and more configuration options. Additionally, this fork improves upon both the built-in effect and the original by [Vlad Zahorodnii](https://github.com/zzag/kwin-effects-yet-another-magic-lamp) with fixed multi-monitor support — correctly identifying the target panel when minimizing, regardless of which screen the window is on or how panels are distributed across displays.
 
-This project was originally created by [Vlad Zahorodnii](https://github.com/zzag/kwin-effects-yet-another-magic-lamp), who maintained it through Plasma 5.27. Since the original repository has not been updated in several years, this fork continues development independently, focusing exclusively on Wayland under Plasma 6. X11 is no longer supported.
+This project was originally created by [Vlad Zahorodnii](https://github.com/zzag/kwin-effects-yet-another-magic-lamp), who maintained it through Plasma 5.27. The Plasma 6 port was done in the [reloaded fork](https://github.com/koryboc/kwin-effects-yet-another-magic-lamp-reloaded) by Roy Bock, which this fork builds on and continues to track against current Plasma 6.7.x releases. Development focuses on Wayland; X11 is no longer supported.
 
 ### Installation
 
@@ -19,8 +19,8 @@ This project was originally created by [Vlad Zahorodnii](https://github.com/zzag
 Clone the repository and run the install script — it will check and install all required dependencies automatically, then build and install the effect.
 
 ```yaml
-git clone https://github.com/koryboc/kwin-effects-yet-another-magic-lamp-reloaded.git
-cd kwin-effects-yet-another-magic-lamp-reloaded
+git clone https://github.com/QuakeString/kwin-effects-yet-another-magic-lamp.git
+cd kwin-effects-yet-another-magic-lamp
 chmod +x ./install.sh
 ./install.sh
 ```
@@ -125,8 +125,8 @@ After you installed all the required dependencies, you can build
 the effect:
 
 ```yaml
-git clone https://github.com/koryboc/kwin-effects-yet-another-magic-lamp-reloaded.git
-cd kwin-effects-yet-another-magic-lamp-reloaded
+git clone https://github.com/QuakeString/kwin-effects-yet-another-magic-lamp.git
+cd kwin-effects-yet-another-magic-lamp
 mkdir build && cd build
 cmake .. \
     -DCMAKE_BUILD_TYPE=Release \

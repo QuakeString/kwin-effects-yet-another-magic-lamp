@@ -2,9 +2,11 @@ name: Build (openSUSE Tumbleweed)
 
 on:
   push:
-    branches: [master]
+    branches: ['**']
   pull_request:
-    branches: [master]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * 1'
 
 jobs:
   build:
@@ -23,6 +25,9 @@ jobs:
           qt6-base-devel qt6-declarative-devel libdrm-devel libepoxy-devel
           vulkan-headers
 
+      - name: Report KWin version
+        run: rpm -q kwin6-devel
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -31,3 +36,7 @@ jobs:
 
       - name: Build
         run: cmake --build build --parallel
+
+      - name: Verify install layout
+        shell: bash
+        run: .github/verify-install.sh

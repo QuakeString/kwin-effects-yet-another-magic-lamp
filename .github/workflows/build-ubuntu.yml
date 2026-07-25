@@ -2,9 +2,11 @@ name: Build (Ubuntu)
 
 on:
   push:
-    branches: [master]
+    branches: ['**']
   pull_request:
-    branches: [master]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * 1'
 
 jobs:
   build:
@@ -45,3 +47,8 @@ jobs:
       - name: Build
         if: env.skip != 'true'
         run: cmake --build build --parallel
+
+      - name: Verify install layout
+        if: env.skip != 'true'
+        shell: bash
+        run: .github/verify-install.sh

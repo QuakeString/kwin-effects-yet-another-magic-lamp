@@ -2,9 +2,13 @@ name: Build (Arch Linux)
 
 on:
   push:
-    branches: [master]
+    branches: ['**']
   pull_request:
-    branches: [master]
+  workflow_dispatch:
+  schedule:
+    # KWin has no stable ABI or API across releases, so build weekly against the
+    # current rolling packages to catch breakage before users do.
+    - cron: '0 4 * * 1'
 
 jobs:
   build:
@@ -20,6 +24,9 @@ jobs:
           base-devel cmake extra-cmake-modules kwin qt6-base kcmutils
           kconfig kconfigwidgets kcoreaddons kwindowsystem libdrm vulkan-headers
 
+      - name: Report KWin version
+        run: pacman -Q kwin
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -28,3 +35,7 @@ jobs:
 
       - name: Build
         run: cmake --build build --parallel
+
+      - name: Verify install layout
+        shell: bash
+        run: .github/verify-install.sh

@@ -27,7 +27,7 @@ ul='\033[4m'
 # ── Config ────────────────────────────────────────────────────────────────────
 
 base="$(cd "$(dirname "$0")" && pwd)"
-repo=kwin-effects-yet-another-magic-lamp-reloaded
+repo=kwin-effects-yet-another-magic-lamp
 
 # ── Plasma version check ──────────────────────────────────────────────────────
 
