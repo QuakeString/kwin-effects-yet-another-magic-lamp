@@ -638,6 +638,15 @@ qreal Model::computeShapeFactor() const
         Q_UNREACHABLE();
     }
 
+    if (distanceToIcon <= 0) {
+        // The target sits on the window edge it is travelling towards, so there
+        // is no distance to spread the shape over. Reachable with a degenerate
+        // icon geometry (a window with no taskbar entry animates towards a
+        // one-pixel rect at the cursor); dividing here would yield infinity and
+        // blow up every vertex.
+        return m_parameters.shapeFactor;
+    }
+
     const qreal minimumShapeFactor = static_cast<qreal>(movingExtent) / distanceToIcon;
     return qMax(m_parameters.shapeFactor, minimumShapeFactor);
 }

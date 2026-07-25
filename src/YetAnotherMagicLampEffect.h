@@ -73,7 +73,9 @@ private Q_SLOTS:
     void slotActiveFullScreenEffectChanged();
 
 private:
-    void startMinimize(KWin::EffectWindow* w);
+    // useCursorFallback is set on the retried attempt, once waiting for the task
+    // manager to publish icon geometry has not paid off.
+    void startMinimize(KWin::EffectWindow* w, bool useCursorFallback = false);
     void startUnminimize(KWin::EffectWindow* w);
 
     Model::Parameters m_modelParameters;

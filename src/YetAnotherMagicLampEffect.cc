@@ -56,6 +56,40 @@ static Direction dockEdge(KWin::EffectWindow* dock)
     return Direction::Bottom;
 }
 
+// Stand-in target for windows that have no taskbar entry to shrink into: no task
+// manager in the panel, a window hidden from the taskbar, or a task manager that
+// never publishes icon geometry. KWin's built-in Magic Lamp animates towards the
+// cursor in that case; do the same rather than skipping the animation entirely.
+static QRectF cursorIconGeometry(KWin::EffectWindow* w)
+{
+    const QRectF windowRect = w->frameGeometry();
+    QPointF pt = KWin::effects->cursorPos();
+
+    // Sucking the window into a point inside itself looks broken, so move the
+    // target out to the window edge nearest the cursor.
+    if (windowRect.contains(pt)) {
+        const qreal toLeft = pt.x() - windowRect.left();
+        const qreal toRight = windowRect.right() - pt.x();
+        const qreal toTop = pt.y() - windowRect.top();
+        const qreal toBottom = windowRect.bottom() - pt.y();
+        const qreal nearest = qMin(qMin(toLeft, toRight), qMin(toTop, toBottom));
+
+        if (nearest == toLeft) {
+            pt.setX(windowRect.left());
+        } else if (nearest == toRight) {
+            pt.setX(windowRect.right());
+        } else if (nearest == toTop) {
+            pt.setY(windowRect.top());
+        } else {
+            pt.setY(windowRect.bottom());
+        }
+    }
+
+    // One pixel, not an empty rect: Model::start() treats an invalid icon
+    // geometry as "read it back from the window" and would discard this.
+    return QRectF(pt - QPointF(0.5, 0.5), QSizeF(1, 1));
+}
+
 // Returns the icon geometry on the screen that contains the window's center.
 // When iconGeometry() points to a panel on a different screen (race condition
 // with multiple task managers writing _NET_WM_ICON_GEOMETRY), the icon is
@@ -447,14 +481,18 @@ void YetAnotherMagicLampEffect::slotMinimizedChanged(KWin::EffectWindow* w)
     }
 }
 
-void YetAnotherMagicLampEffect::startMinimize(KWin::EffectWindow* w)
+void YetAnotherMagicLampEffect::startMinimize(KWin::EffectWindow* w, bool useCursorFallback)
 {
     if (KWin::effects->activeFullScreenEffect()) {
         return;
     }
 
-    const QRectF iconRect = w->iconGeometry();
-    if (!iconRect.isValid()) {
+    QRectF target;
+    if (w->iconGeometry().isValid()) {
+        target = resolveIconGeometry(w);
+    } else if (useCursorFallback) {
+        target = cursorIconGeometry(w);
+    } else {
         // On Wayland secondary screens the Plasma taskbar sets iconGeometry
         // asynchronously (after QML layout). Keep the window visible and retry
         // once the geometry arrives.
@@ -467,7 +505,10 @@ void YetAnotherMagicLampEffect::startMinimize(KWin::EffectWindow* w)
             KWin::EffectWindow* win = weakRef.data();
             m_pendingMinimize.remove(win);
             if (win && win->isMinimized()) {
-                startMinimize(win);
+                // Retry with the cursor fallback, so this resolves either way
+                // instead of re-arming the timer for as long as the window
+                // stays minimized.
+                startMinimize(win, true);
             }
         });
         return;
@@ -476,7 +517,7 @@ void YetAnotherMagicLampEffect::startMinimize(KWin::EffectWindow* w)
     AnimationData& animData = m_animations[w];
     animData.model.setWindow(w);
     animData.model.setParameters(m_modelParameters);
-    animData.model.setIconGeometry(resolveIconGeometry(w));
+    animData.model.setIconGeometry(target);
     animData.model.start(Model::AnimationKind::Minimize);
     animData.visibleRef = KWin::EffectWindowVisibleRef(w, KWin::EffectWindow::PAINT_DISABLED_BY_MINIMIZE);
 
@@ -491,15 +532,16 @@ void YetAnotherMagicLampEffect::startUnminimize(KWin::EffectWindow* w)
         return;
     }
 
-    const QRectF iconRect = w->iconGeometry();
-    if (!iconRect.isValid()) {
-        return;
-    }
+    // No retry here: on unminimize the window is on its way back, so animating
+    // from the cursor beats not animating at all.
+    const QRectF target = w->iconGeometry().isValid()
+        ? resolveIconGeometry(w)
+        : cursorIconGeometry(w);
 
     AnimationData& animData = m_animations[w];
     animData.model.setWindow(w);
     animData.model.setParameters(m_modelParameters);
-    animData.model.setIconGeometry(resolveIconGeometry(w));
+    animData.model.setIconGeometry(target);
     animData.model.start(Model::AnimationKind::Unminimize);
 
     redirect(w);
