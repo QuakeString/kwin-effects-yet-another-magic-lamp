@@ -385,7 +385,7 @@ void YetAnotherMagicLampEffect::prePaintWindow(KWin::RenderView* view, KWin::Eff
 #else
 void YetAnotherMagicLampEffect::prePaintScreen(KWin::ScreenPrePaintData& data)
 {
-    const auto presentTime = KWinCompat::presentTime(data);
+    const auto presentTime = KWinCompat::monotonicTimestamp();
     for (AnimationData& animData : m_animations) {
         animData.model.advance(presentTime);
     }
@@ -400,7 +400,7 @@ void YetAnotherMagicLampEffect::prePaintWindow(KWin::RenderView* view, KWin::Eff
     if (m_animations.contains(w)) {
         data.mask |= PAINT_WINDOW_TRANSFORMED;
     }
-    KWinCompat::prePaintWindow(KWin::effects, view, w, data, KWinCompat::presentTime(view));
+    KWinCompat::prePaintWindow(KWin::effects, view, w, data, KWinCompat::monotonicTimestamp());
 }
 #endif
 

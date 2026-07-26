@@ -11,14 +11,6 @@
 
 #include <effect/effecthandler.h>
 
-#if __has_include(<scene/scene.h>)
-// Defines KWin::RenderView, which carries the timestamp of the frame that is
-// being prepared. KWin 6.7 dropped the presentation time from the pre-paint
-// hooks, so this is where animations get their clock from now.
-#include <scene/scene.h>
-#define KWINCOMPAT_HAVE_RENDER_VIEW 1
-#endif
-
 #include <chrono>
 #include <type_traits>
 
@@ -52,34 +44,6 @@ inline std::chrono::milliseconds monotonicTimestamp()
 {
     return std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now().time_since_epoch());
-}
-
-// The timestamp animations should be advanced to. Prefer the target presentation
-// time of the frame being prepared, which is what KWin passed to prePaintScreen()
-// before 6.7 and what the built-in effects still animate against; advancing on
-// wall-clock time instead makes the animation jitter when a frame misses vblank.
-template <typename RenderView>
-std::chrono::milliseconds presentTime([[maybe_unused]] RenderView* view)
-{
-#ifdef KWINCOMPAT_HAVE_RENDER_VIEW
-    if constexpr (requires { view->nextPresentationTimestamp(); }) {
-        if (view) {
-            return std::chrono::duration_cast<std::chrono::milliseconds>(
-                view->nextPresentationTimestamp());
-        }
-    }
-#endif
-    return monotonicTimestamp();
-}
-
-template <typename ScreenPrePaintData>
-std::chrono::milliseconds presentTime(const ScreenPrePaintData& data)
-{
-    if constexpr (requires { data.view; }) {
-        return presentTime(data.view);
-    } else {
-        return monotonicTimestamp();
-    }
 }
 
 template <typename EffectsHandler>
